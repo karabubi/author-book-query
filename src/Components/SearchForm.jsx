@@ -2,29 +2,29 @@ import { useState } from "react";
 import "../App.css";
 
 const SearchForm = ({ onSearch }) => {
-  const [authorName, setAuthorName] = useState("");
-  const [bookName, setBookName] = useState("");
+  const [characterName, setCharacterName] = useState("Harry");
+  const [bookName, setBookName] = useState("Prince");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSearch({ authorName, bookName });
+    onSearch({ characterName, bookName });
   };
 
   const handleClear = () => {
-    setAuthorName("");
+    setCharacterName("");
     setBookName("");
   };
 
   return (
     <form onSubmit={handleSubmit} className="search-form">
       <div className="form-group">
-        <label htmlFor="authorName">Author Name:</label>
+        <label htmlFor="characterName">Character Name:</label>
         <input
           type="text"
-          id="authorName"
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="Enter author's name"
+          id="characterName"
+          value={characterName}
+          onChange={(e) => setCharacterName(e.target.value)}
+          placeholder="Enter Character's name"
         />
       </div>
 
