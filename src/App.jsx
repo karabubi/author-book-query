@@ -1,82 +1,103 @@
 import { useState } from "react";
 import SearchForm from "./Components/SearchForm.jsx";
-import Results from "./Components/Results.jsx";
+// import Results from "./Components/Results.jsx";
+
+//
+// openlibrary.org seems to be down
+//
+// I just picked a working API
+// https://github.com/fedeperin/potterapi
+const API_BASE_URL = "https://potterapi-fedeperin.vercel.app/en";
+
+// Endpoints
+// GET /[lang]/books
+// GET /[lang]/characters
+// GET /[lang]/houses
+// GET /[lang]/spells
+
+// Param  Recieves  Description
+// -----  --------  -----------
+// index  number    Returns only one item, the one that on the whole list has the index selected
+// max    number    Returns the whole list cropped by the number passed
+// page   number    If max is used, you can also use this param to indicate where to start cropping
+// search string    Searches in all the items and returns the best matches
 
 const App = () => {
-  const [results, setResults] = useState([]);
-  const [searchType, setSearchType] = useState("");
+  const [characterResult, setCharacterResults] = useState([]);
+  const [booksResult, setBooksResults] = useState([]);
 
-  const handleSearch = async ({ authorName, bookName }) => {
-    setResults([]);
-    if (!authorName && !bookName) {
-      alert("Please enter an author name or book title.");
+  const handleSearch = async ({ characterName, bookName }) => {
+    setCharacterResults([]);
+    setBooksResults([]);
+    if (!characterName && !bookName) {
+      alert("Please enter an Character name or book title.");
       return;
     }
 
-    try {
-      let res;
-      if (authorName && bookName) {
-        setSearchType("books-authors");
-        res = await fetch(
-          `https://openlibrary.org/search.json?author=${encodeURIComponent(
-            authorName
-          )}&title=${encodeURIComponent(bookName)}`
-        );
-      } else if (authorName) {
-        setSearchType("books");
-        res = await fetch(
-          `https://openlibrary.org/search.json?author=${encodeURIComponent(
-            authorName
-          )}`
-        );
-      } else if (bookName) {
-        setSearchType("authors");
-        res = await fetch(
-          `https://openlibrary.org/search.json?title=${encodeURIComponent(
-            bookName
-          )}`
-        );
+    if (characterName) {
+      const url = `${API_BASE_URL}/characters?search=${encodeURIComponent(
+        characterName
+      )}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data: ${res.statusText}`);
+        }
+        if (!res.headers.get("content-type").includes("application/json")) {
+          throw new Error("Response is not in JSON format.");
+        }
+        const data = await res.json();
+        setCharacterResults(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Failed to fetch data from API.");
       }
+    }
 
-      const data = await res.json();
-
-      if (searchType === "books") {
-        const books = data.docs.slice(0, 20).map((book) => ({
-          title: book.title,
-          author: book.author_name?.[0] || "Unknown", // added author name
-          cover: book.cover_i
-            ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`
-            : null,
-        }));
-        setResults(books);
-      } else {
-        const authors = [
-          ...new Set(data.docs.flatMap((book) => book.author_name)),
-        ].map((author) => ({ name: author }));
-        setResults(authors);
+    if (bookName) {
+      const url = `${API_BASE_URL}/books?search=${encodeURIComponent(
+        bookName
+      )}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data: ${res.statusText}`);
+        }
+        if (!res.headers.get("content-type").includes("application/json")) {
+          throw new Error("Response is not in JSON format.");
+        }
+        const data = await res.json();
+        setBooksResults(data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        alert("Failed to fetch data from API.");
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-      alert("Failed to fetch data from Open Library.");
     }
   };
 
   return (
     <div className="App">
       <header>
-        <h1>Author and Book Query</h1>
+        <h1>Character and Book Query</h1>
         <p>
-          Enter the name of an author to find all their books, or enter a book
-          title to find all its authors.
+          Enter the name of an Character to find all their books, or enter a
+          book title to find all its Characters.
         </p>
       </header>
 
       <main>
         <SearchForm onSearch={handleSearch} />
-        <Results results={results} type={searchType} />
+        <p style={{ fontFamily: "monospace" }}>
+          {JSON.stringify(characterResult, null, 2)}
+        </p>
+        <p style={{ fontFamily: "monospace" }}>
+          {JSON.stringify(booksResult, null, 2)}
+        </p>
+        {/* I did not handle this */}
+        {/* <Results results={results} type={searchType} /> */}
       </main>
 
-      <footer>&copy; 2024 Author Book Query : Alkarabubi</footer>
+      <footer>&copy; 2024 Harry Potter Book Query : Alkarabubi</footer>
     </div>
   );
 };
